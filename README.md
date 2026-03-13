@@ -69,36 +69,38 @@ sequenceDiagram
     end
 ```
 
-    🛠 Tech Stack
-Language: Kotlin
+ ## 🛠 Tech Stack
+* **Language:** Kotlin
+* **Framework:** Spring Boot 3
+* **Orchestration:** Kubernetes (Minikube / Docker Desktop)
+* **K8s Integration:** Fabric8 Kubernetes Client
 
-Framework: Spring Boot 3
+## 📦 API Documentation
 
-Orchestration: Kubernetes (Minikube / Docker Desktop)
-
-K8s Integration: Fabric8 Kubernetes Client
-
-📦 API Documentation
-1. Execute a Command
+### 1. Execute a Command
 Starts a new remote executor and runs the provided script.
 
-POST /api/jobs
+**POST** `/api/jobs`
+```json
 {
   "script": "echo 'Hello from TeamCity Cloud!' && sleep 5",
   "cpuRequest": "500m"
 }
 Response (202 Accepted):
+
+JSON
 {
   "jobId": "123e4567-e89b-12d3-a456-426614174000",
   "status": "QUEUED"
 }
-
 2. Check Execution Status
 Retrieves the current state of the execution.
 
 GET /api/jobs/{jobId}
 
 Response (200 OK):
+
+JSON
 {
   "jobId": "123e4567-e89b-12d3-a456-426614174000",
   "status": "IN_PROGRESS" 
@@ -115,3 +117,16 @@ kubectl configured and connected to your local cluster.
 
 Steps to Run
 Start your local Kubernetes cluster:
+
+Bash
+minikube start
+Clone the repository:
+
+Bash
+git clone [https://github.com/YourUsername/teamcity-remote-executor.git](https://github.com/YourUsername/teamcity-remote-executor.git)
+cd teamcity-remote-executor
+Build and run the Spring Boot application:
+
+Bash
+./gradlew bootRun
+(Note: The application will automatically use your local ~/.kube/config to authenticate with the cluster).
