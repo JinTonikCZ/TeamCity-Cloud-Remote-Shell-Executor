@@ -1,137 +1,140 @@
-# **TeamCity Cloud: Remote Shell Executor**
+# TeamCity Cloud: Remote Shell Executor
 
-A lightweight, scalable backend service designed to orchestrate and execute shell commands on remote virtual environments. This project simulates the core autoscaling behavior of CI/CD agents, dynamically provisioning executors based on user demand.
+A lightweight backend service that executes shell commands on a **remote virtual machine** and tracks the execution lifecycle. The project models the core idea behind autoscaling build agents in **TeamCity Cloud**: when a user submits a job, the service provisions an isolated executor, waits until it becomes ready, runs the script, and exposes the job status through a REST API.
 
-## **🚀 Architecture Overview**
+## Overview
 
-To ensure scalability, isolation, and efficient resource allocation, this service leverages **Kubernetes Pods** as remote executors.
+The service is implemented in **Kotlin** with **Spring Boot**.
 
-The application is built with **Kotlin** and **Spring Boot**, utilizing the Fabric8 Kubernetes Client to programmatically interact with the Kubernetes API.
+A user should be able to:
 
-### **System Workflow (Autoscaling Sequence)**
+- submit a shell command to be executed
+- specify the required resources for the executor, for example CPU count
+- check the execution status: `QUEUED`, `IN_PROGRESS`, or `FINISHED`
 
-*(Source: Author's own diagram / Собственный рисунок)*
+The service should:
+
+- create a new remote VM for each submitted job
+- wait until the VM is initialized and ready
+- execute the shell script on that VM
+- update and expose the current job status
+- terminate the VM after execution to free resources
+
+## Architecture
+
+This implementation assumes that the remote executor is a **virtual machine** managed by a cloud provider or a VM provisioning layer.
+
+Main components:
+
+- **JobController** — REST API for submitting jobs and retrieving status
+- **JobService** — application logic for job lifecycle management
+- **VM Provisioner Client** — integration with the cloud or virtualization API
+- **Remote Executor VM** — temporary machine where the shell command is executed
+
+## System Workflow
 
 ```mermaid
-sequenceDiagram  
-    autonumber  
-    actor User as Client (Developer)  
-      
-    box "Spring Boot Service" #fffdee
-        participant API as JobController  
-        participant Service as JobService  
-    end  
-      
-    box "Kubernetes Cluster" #eef7ff
-        participant K8s as K8s API (Fabric8)  
-        participant Pod as Pod (Remote Executor)  
-    end
+sequenceDiagram
+    autonumber
+    actor User as Client
+    participant API as JobController
+    participant Service as JobService
+    participant Cloud as VM Provisioner API
+    participant VM as Remote Executor VM
 
-    rect rgb(250, 250, 250)  
-    Note over User, API: 1. Command Submission & Queuing  
-    User->>API: POST /api/jobs {script, cpu}  
-    activate API  
-    API->>Service: submitJob(script, cpu)  
-    activate Service  
-    Service->>K8s: Request Pod creation  
-    activate K8s  
-    K8s-->>Service: Pod created (Pending)  
-    deactivate K8s  
-    Service-->>API: Job ID generated  
-    deactivate Service  
-    API-->>User: 202 Accepted {job_id, status: "QUEUED"}  
-    deactivate API  
-    end
+    User->>API: POST /api/jobs\n{ script, cpuRequest }
+    API->>Service: submitJob(script, cpuRequest)
+    Service->>Cloud: createVm(cpuRequest)
+    Cloud-->>Service: vmId created, state=PENDING
+    Service-->>API: jobId, status=QUEUED
+    API-->>User: 202 Accepted
 
-    rect rgb(250, 250, 250)  
-    Note over K8s, Pod: 2. Background Execution  
-    K8s->>Pod: Container Startup  
-    activate Pod  
-    Note right of Pod: Pod transitions to Running.<br/>Isolated executor ready.  
-    Pod->>Pod: Execute shell script  
-    Pod-->>K8s: Script finished  
-    deactivate Pod  
-    Note right of K8s: Pod is terminated.<br/>Resources freed.  
-    end
+    Service->>Cloud: waitUntilReady(vmId)
+    Cloud-->>Service: VM is RUNNING
+    Service->>VM: execute script via SSH / agent
+    VM-->>Service: execution result
+    Service->>Cloud: terminateVm(vmId)
+    Service->>Service: update status to FINISHED
 
-    rect rgb(250, 250, 250)  
-    Note over User, K8s: 3. Status Polling  
-    User->>API: GET /api/jobs/{id}  
-    activate API  
-    API->>Service: getJobStatus(id)  
-    activate Service  
-    Service->>K8s: Request Pod state  
-    activate K8s  
-    K8s-->>Service: Return Pod state  
-    deactivate K8s  
-    Service->>Service: Map K8s phase to Status  
-    Service-->>API: Status: FINISHED  
-    deactivate Service  
-    API-->>User: 200 OK {status: "FINISHED"}  
-    deactivate API  
-    end
+    User->>API: GET /api/jobs/{jobId}
+    API->>Service: getJobStatus(jobId)
+    Service-->>API: status
+    API-->>User: 200 OK { jobId, status }
 ```
 
-## **🛠 Tech Stack**
+## Job Lifecycle
 
-* **Language:** Kotlin  
-* **Framework:** Spring Boot 3  
-* **Orchestration:** Kubernetes (Minikube / Docker Desktop for local testing)  
-* **K8s Integration:** Fabric8 Kubernetes Client
+```text
+QUEUED -> IN_PROGRESS -> FINISHED
+```
 
-## **📦 API Documentation**
+Suggested meaning of states:
 
-### **1\. Execute a Command**
+- `QUEUED` — request accepted, VM is being provisioned
+- `IN_PROGRESS` — VM is ready and the script is running
+- `FINISHED` — execution completed and the result is available
 
-Starts a new remote executor and runs the provided script.
+## REST API
 
-**POST** /api/jobs
+### Submit a job
 
-{  
-  "script": "echo 'Hello from TeamCity Cloud\!' && sleep 5",  
-  "cpuRequest": "500m"  
+**POST** `/api/jobs`
+
+Request body:
+
+```json
+{
+  "script": "echo 'Hello from TeamCity Cloud' && sleep 5",
+  "cpuRequest": "2"
 }
+```
 
-**Response (202 Accepted):**
+Example response:
 
-{  
-  "jobId": "123e4567-e89b-12d3-a456-426614174000",  
-  "status": "QUEUED"  
+```json
+{
+  "jobId": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "QUEUED"
 }
+```
 
-### **2\. Check Execution Status**
+### Get job status
 
-Retrieves the current state of the execution.
+**GET** `/api/jobs/{jobId}`
 
-**GET** /api/jobs/{jobId}
+Example response:
 
-**Response (200 OK):**
-
-{  
-  "jobId": "123e4567-e89b-12d3-a456-426614174000",  
-  "status": "IN\_PROGRESS"   
+```json
+{
+  "jobId": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "IN_PROGRESS"
 }
+```
 
-*(Status enum: QUEUED, IN\_PROGRESS, FINISHED)*
+## Technology Stack
 
-## **⚙️ Local Setup & Running**
+- **Language:** Kotlin
+- **Framework:** Spring Boot 3
+- **Executor model:** ephemeral remote virtual machines
+- **Communication with VM:** SSH or lightweight agent
+- **Build tool:** Gradle
 
-### **Prerequisites**
+## Local Development
 
-* **Java 17+** installed.  
-* **Minikube** or **Docker Desktop** with Kubernetes enabled.  
-* **kubectl** configured and connected to your local cluster.
+### Prerequisites
 
-### **Steps to Run**
+- Java 17+
+- Gradle or Gradle Wrapper
+- access to a VM provider API or a mocked provisioner for local testing
 
-1. **Start your local Kubernetes cluster:**  
-   minikube start
+### Run locally
 
-2. **Clone the repository:**  
-   git clone \[https://github.com/YourUsername/teamcity-remote-executor.git\](https://github.com/YourUsername/teamcity-remote-executor.git)  
-   cd teamcity-remote-executor
+```bash
+./gradlew bootRun
+```
 
-3. **Build and run the Spring Boot application:**  
-   ./gradlew bootRun
+## Notes
 
-   *(Note: The application will automatically use your local \~/.kube/config to authenticate with the cluster).*
+- For local development, the VM provisioning layer can be mocked.
+- In a production-ready version, job results, logs, retries, and timeouts should be persisted.
+- If you later decide to implement the executor with Kubernetes pods instead of VMs, only the provisioning layer changes; the overall job lifecycle remains almost the same.
