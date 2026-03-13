@@ -17,57 +17,57 @@ sequenceDiagram
     autonumber  
     actor User as Client (Developer)  
       
-    box rgb(255, 253, 238\) Spring Boot Service  
+    box "Spring Boot Service" #fffdee
         participant API as JobController  
         participant Service as JobService  
     end  
       
-    box rgb(238, 247, 255\) Kubernetes Cluster  
+    box "Kubernetes Cluster" #eef7ff
         participant K8s as K8s API (Fabric8)  
         participant Pod as Pod (Remote Executor)  
     end
 
-    rect rgb(250, 250, 250\)  
-    note right of User: 1\. Command Submission & Queuing  
-    User-\>\>API: POST /api/jobs {script: "echo Hello", cpu: "1"}  
+    rect rgb(250, 250, 250)  
+    Note over User, API: 1. Command Submission & Queuing  
+    User->>API: POST /api/jobs {script, cpu}  
     activate API  
-    API-\>\>Service: submitJob(script, cpu)  
+    API->>Service: submitJob(script, cpu)  
     activate Service  
-    Service-\>\>K8s: Request Pod creation (Allocate CPU)  
+    Service->>K8s: Request Pod creation  
     activate K8s  
-    K8s--\>\>Service: Pod successfully created (Pending)  
+    K8s-->>Service: Pod created (Pending)  
     deactivate K8s  
-    Service--\>\>API: Job ID generated (e.g., "123")  
+    Service-->>API: Job ID generated  
     deactivate Service  
-    API--\>\>User: HTTP 202 Accepted {job\_id: "123", status: "QUEUED"}  
+    API-->>User: 202 Accepted {job_id, status: "QUEUED"}  
     deactivate API  
     end
 
-    rect rgb(250, 250, 250\)  
-    note right of User: 2\. Background Execution (Autoscaling)  
-    K8s-\>\>Pod: Container Startup (Allocate Resources)  
+    rect rgb(250, 250, 250)  
+    Note over K8s, Pod: 2. Background Execution  
+    K8s->>Pod: Container Startup  
     activate Pod  
-    Note right of Pod: Pod transitions to Running state.\<br/\>This acts as our isolated executor.  
-    Pod-\>\>Pod: Execute shell script  
-    Pod--\>\>K8s: Script execution finished (Success / Failure)  
+    Note right of Pod: Pod transitions to Running.<br/>Isolated executor ready.  
+    Pod->>Pod: Execute shell script  
+    Pod-->>K8s: Script finished  
     deactivate Pod  
-    Note right of K8s: Pod is terminated.\<br/\>Cluster resources are automatically freed.  
+    Note right of K8s: Pod is terminated.<br/>Resources freed.  
     end
 
-    rect rgb(250, 250, 250\)  
-    note right of User: 3\. Status Polling by Client  
-    User-\>\>API: GET /api/jobs/123  
+    rect rgb(250, 250, 250)  
+    Note over User, K8s: 3. Status Polling  
+    User->>API: GET /api/jobs/{id}  
     activate API  
-    API-\>\>Service: getJobStatus("123")  
+    API->>Service: getJobStatus(id)  
     activate Service  
-    Service-\>\>K8s: Request state of Pod associated with Job "123"  
+    Service->>K8s: Request Pod state  
     activate K8s  
-    K8s--\>\>Service: Return Pod state (e.g., Succeeded)  
+    K8s-->>Service: Return Pod state  
     deactivate K8s  
-    Service-\>\>Service: Map K8s phase to Application status  
-    Service--\>\>API: Status: FINISHED  
+    Service->>Service: Map K8s phase to Status  
+    Service-->>API: Status: FINISHED  
     deactivate Service  
-    API--\>\>User: HTTP 200 OK {job\_id: "123", status: "FINISHED"}  
+    API-->>User: 200 OK {status: "FINISHED"}  
     deactivate API  
     end
 ```
