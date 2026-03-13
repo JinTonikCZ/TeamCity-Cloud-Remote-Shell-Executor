@@ -12,6 +12,7 @@ The application is built with **Kotlin** and **Spring Boot**, utilizing the Fabr
 
 *(Source: Author's own diagram / Собственный рисунок)*
 
+```mermaid
 sequenceDiagram  
     autonumber  
     actor User as Client (Developer)  
@@ -69,6 +70,7 @@ sequenceDiagram
     API--\>\>User: HTTP 200 OK {job\_id: "123", status: "FINISHED"}  
     deactivate API  
     end
+```
 
 ## **🛠 Tech Stack**
 
