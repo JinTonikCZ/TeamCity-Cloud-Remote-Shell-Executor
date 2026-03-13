@@ -32,6 +32,7 @@ Main components:
 - **Remote Executor VM** — temporary machine where the shell command is executed
 
 ## System Workflow
+```mermaid
 sequenceDiagram
     autonumber
     actor User as Client (Developer)
