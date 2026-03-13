@@ -90,11 +90,12 @@ sequenceDiagram
         API-->>User: 200 OK {status: "FINISHED"}
         deactivate API
     end
+```
 ## Job Lifecycle
 
-```text
+text
 QUEUED -> IN_PROGRESS -> FINISHED
-```
+
 
 Suggested meaning of states:
 
