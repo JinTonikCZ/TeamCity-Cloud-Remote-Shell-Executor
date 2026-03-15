@@ -278,29 +278,6 @@ The current MVP supports:
 
 ---
 
-## Limitations
-
-Current limitations of this MVP:
-- requires an existing Kubernetes cluster
-- does not run in a fully standalone mode
-- does not keep persistent job history
-- does not reuse idle executors
-- does not implement a real autoscaler
-- uses popup-based log display instead of live log streaming
-
----
-
-## Possible Future Improvements
-
-Potential extensions include:
-- maintain a small warm pool of pre-created executors
-- reuse idle pods for faster startup
-- add autoscaling heuristics based on queue length
-- collect metrics for provisioning latency and executor utilization
-- improve log streaming and overall UX
-- persist job history and execution metadata
-
----
 
 ## Notes
 
