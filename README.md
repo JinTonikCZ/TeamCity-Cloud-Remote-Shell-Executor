@@ -126,15 +126,40 @@ sequenceDiagram
 ```text
 QUEUED -> IN_PROGRESS -> FINISHED
                      -> FAILED
-Example success response:
+```
 
+**Suggested meaning of states:**
+- **QUEUED** — request accepted, executor Pod is being scheduled or started
+- **IN_PROGRESS** — Pod is running and the script is executing
+- **FINISHED** — execution completed successfully
+- **FAILED** — pod creation or script execution failed
+
+---
+
+## REST API
+
+### Submit a job
+**POST** `/api/jobs/start`
+
+**Request body:**
+```json
+{
+  "id": "web-task-101",
+  "script": "echo Hello && sleep 5 && echo Done",
+  "cpu": "1"
+}
+```
+
+**Example success response:**
+```text
 ✅ Job web-task-101 successfully submitted with CPU=1.
-List jobs
+```
 
-GET /api/jobs/list
+### List jobs
+**GET** `/api/jobs/list`
 
-Example response:
-
+**Example response:**
+```json
 [
   {
     "id": "web-task-101",
@@ -142,189 +167,154 @@ Example response:
     "status": "FINISHED"
   }
 ]
-Get job logs
+```
 
-GET /api/jobs/{id}/logs
+### Get job logs
+**GET** `/api/jobs/{id}/logs`
 
-Example response:
-
+**Example response:**
+```text
 Hello
 Done
-Delete a job
+```
 
-DELETE /api/jobs/{id}
+### Delete a job
+**DELETE** `/api/jobs/{id}`
 
-Example response:
-
+**Example response:**
+```text
 ✅ Job web-task-101 has been deleted from the cluster.
-Validation Rules
-Job ID
+```
 
-Allowed format:
+---
 
-lowercase letters
+## Validation Rules
 
-numbers
+### Job ID
+**Allowed format:**
+- lowercase letters
+- numbers
+- hyphens
 
-hyphens
+**Examples:**
+- ✅ Valid: `web-task-101`, `job-1`
+- ❌ Invalid: `webTask101`, `Job_1`, `task 1`
 
-Example valid values:
+### CPU
+**Allowed values:**
+- numeric only
+- greater than 0
+- less than or equal to 8
 
-web-task-101
+**Examples:**
+- ✅ Valid: `0.5`, `1`, `2`
 
-job-1
+---
 
-Example invalid values:
+## Technology Stack
 
-webTask101
+- **Language:** Kotlin
+- **Framework:** Spring Boot 3
+- **Executor model:** ephemeral Kubernetes Pods
+- **Kubernetes client:** Fabric8 Kubernetes Client
+- **Frontend:** HTML + JavaScript + Bootstrap 5
+- **Build tool:** Gradle
 
-Job_1
+---
 
-task 1
-
-CPU
-
-Allowed values:
-
-numeric only
-
-greater than 0
-
-less than or equal to 8
-
-Examples:
-
-0.5
-
-1
-
-2
-
-Technology Stack
-
-Language: Kotlin
-
-Framework: Spring Boot 3
-
-Executor model: ephemeral Kubernetes Pods
-
-Kubernetes client: Fabric8 Kubernetes Client
-
-Frontend: HTML + JavaScript + Bootstrap 5
-
-Build tool: Gradle
-
-Tested Environment
+## Tested Environment
 
 This project was tested with:
+- Windows 11 host machine
+- IntelliJ IDEA
+- Ubuntu virtual machine
+- MicroK8s
+- Remote cluster access through a valid kubeconfig
 
-Windows 11 host machine
+---
 
-IntelliJ IDEA
+## Local Development
 
-Ubuntu virtual machine
+### Prerequisites
+- Java 17+
+- Gradle or Gradle Wrapper
+- Access to a Kubernetes cluster
+- Valid `kubeconfig` (tested with MicroK8s on Ubuntu VM)
 
-MicroK8s
+### Run locally
+Using Windows PowerShell:
 
-remote cluster access through a valid kubeconfig
-
-Local Development
-Prerequisites
-
-Java 17+
-
-Gradle or Gradle Wrapper
-
-access to a Kubernetes cluster
-
-valid kubeconfig
-
-tested with MicroK8s on Ubuntu VM
-
-Run locally
-
-Windows PowerShell:
-
+```powershell
 $env:KUBECONFIG="C:\Users\YOUR_USER\.kube\config"
 .\gradlew.bat bootRun
+```
 
-Open:
+Then open your browser at: `http://localhost:8080`
 
-http://localhost:8080
-Example Demo Job
+---
 
-Job ID: web-task-200
+## Example Demo Job
 
-CPU: 1
+- **Job ID:** `web-task-200`
+- **CPU:** `1`
+- **Script:**
+  ```bash
+  echo Hello && sleep 3 && echo Done
+  ```
 
-Script:
+---
 
-echo Hello && sleep 3 && echo Done
-Current Capabilities
+## Current Capabilities
 
 The current MVP supports:
+- creating a temporary executor Pod
+- executing a user-provided shell script
+- assigning CPU resources
+- status tracking
+- log retrieval
+- manual executor deletion
+- input validation on both frontend and backend
+- unit and controller tests
 
-creating a temporary executor Pod
+---
 
-executing a user-provided shell script
-
-assigning CPU resources
-
-status tracking
-
-log retrieval
-
-manual executor deletion
-
-input validation on both frontend and backend
-
-unit and controller tests
-
-Limitations
+## Limitations
 
 Current limitations of this MVP:
+- requires an existing Kubernetes cluster
+- does not run in a fully standalone mode
+- does not keep persistent job history
+- does not reuse idle executors
+- does not implement a real autoscaler
+- uses popup-based log display instead of live log streaming
 
-requires an existing Kubernetes cluster
+---
 
-does not run in a fully standalone mode
-
-does not keep persistent job history
-
-does not reuse idle executors
-
-does not implement a real autoscaler
-
-uses popup-based log display instead of live log streaming
-
-Possible Future Improvements
+## Possible Future Improvements
 
 Potential extensions include:
+- maintain a small warm pool of pre-created executors
+- reuse idle pods for faster startup
+- add autoscaling heuristics based on queue length
+- collect metrics for provisioning latency and executor utilization
+- improve log streaming and overall UX
+- persist job history and execution metadata
 
-maintain a small warm pool of pre-created executors
+---
 
-reuse idle pods for faster startup
+## Notes
 
-add autoscaling heuristics based on queue length
+This project uses Kubernetes Pods instead of full virtual machines. This is a valid remote executor model for a lightweight MVP. The general autoscaling idea remains similar to VM-based provisioning systems, but Pods offer faster startup and simpler demo deployment.
 
-collect metrics for provisioning latency and executor utilization
+---
 
-improve log streaming and overall UX
-
-persist job history and execution metadata
-
-Notes
-
-This project uses Kubernetes Pods instead of full virtual machines.
-
-This is a valid remote executor model for a lightweight MVP.
-
-The general autoscaling idea remains similar to VM-based provisioning systems, but Pods offer faster startup and simpler demo deployment.
-
-Documentation
+## Documentation
 
 Additional technical documentation can be placed in:
+`docs/PROJECT_DOCUMENTATION.md`
 
-docs/PROJECT_DOCUMENTATION.md
-Author
+---
+
+## Author
 
 Developed as a test task / internship project focused on remote execution and Kubernetes-based executor orchestration.
