@@ -45,81 +45,27 @@ Main components:
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    actor User as Client (Developer)
+    actor User
+    participant UI
+    participant API as Spring Boot API
+    participant K8s as Kubernetes
+    participant Pod as Executor Pod
 
-    box "Spring Boot Service" #fffdee
-        participant API as JobController
-        participant Service as JobService
-    end
+    User->>UI: enter id, cpu, script
+    UI->>API: POST /api/jobs/start
+    API->>K8s: create Pod
+    K8s-->>API: Pod created
+    API-->>UI: success
 
-    box "Kubernetes Cluster" #eef7ff
-        participant K8s as K8s API (Fabric8)
-        participant Pod as Pod (Remote Executor)
-    end
+    UI->>API: GET /api/jobs/list
+    API->>K8s: list Pods
+    K8s-->>API: statuses
+    API-->>UI: mapped statuses
 
-    rect rgb(250, 250, 250)
-        Note over User, API: 1. Job Submission
-        User->>API: POST /api/jobs/start {id, script, cpu}
-        activate API
-        API->>Service: createAndRunJob(id, script, cpu)
-        activate Service
-        Service->>Service: validateJobId(id)
-        Service->>Service: validateCpu(cpu)
-        Service->>K8s: Request Pod creation
-        activate K8s
-        K8s-->>Service: Pod created (Pending)
-        deactivate K8s
-        Service-->>API: Job submitted
-        deactivate Service
-        API-->>User: 200 OK
-        deactivate API
-    end
-
-    rect rgb(250, 250, 250)
-        Note over K8s, Pod: 2. Background Execution
-        K8s->>Pod: Container startup
-        activate Pod
-        Note right of Pod: Pod transitions to Running.<br/>Executor becomes available.
-        Pod->>Pod: Execute shell script
-        Pod-->>K8s: Script finished
-        deactivate Pod
-        Note right of K8s: Pod completes or fails.<br/>Resources can be freed later.
-    end
-
-    rect rgb(250, 250, 250)
-        Note over User, K8s: 3. Status Polling
-        User->>API: GET /api/jobs/list
-        activate API
-        API->>Service: getAllJobs()
-        activate Service
-        Service->>K8s: Request Pod states
-        activate K8s
-        K8s-->>Service: Return Pod phases
-        deactivate K8s
-        Service->>Service: Map K8s phase to UI status
-        Service-->>API: QUEUED / IN_PROGRESS / FINISHED / FAILED
-        deactivate Service
-        API-->>User: 200 OK
-        deactivate API
-    end
-
-    rect rgb(250, 250, 250)
-        Note over User, K8s: 4. Log Retrieval
-        User->>API: GET /api/jobs/{id}/logs
-        activate API
-        API->>Service: getJobLogs(id)
-        activate Service
-        Service->>K8s: Request container logs
-        activate K8s
-        K8s-->>Service: Return logs
-        deactivate K8s
-        Service-->>API: Logs
-        deactivate Service
-        API-->>User: 200 OK
-        deactivate API
-    end
-
+    UI->>API: GET /api/jobs/{id}/logs
+    API->>K8s: read logs
+    K8s-->>API: logs
+    API-->>UI: logs
 ```
 ## Job Lifecycle
 
