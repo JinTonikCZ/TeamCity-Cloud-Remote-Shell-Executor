@@ -124,8 +124,7 @@ sequenceDiagram
 ## Job Lifecycle
 
 ```text
-QUEUED -> IN_PROGRESS -> FINISHED
-                     -> FAILED
+QUEUED -> IN_PROGRESS -> FINISHED -> FAILED
 ```
 
 **Suggested meaning of states:**
