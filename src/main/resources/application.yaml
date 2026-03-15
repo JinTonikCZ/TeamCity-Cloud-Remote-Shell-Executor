@@ -1,0 +1,16 @@
+# ===================================================================
+# TeamCity Executor - Application Configuration
+#
+# This configuration file defines the core settings for the Spring Boot
+# backend. It manages the embedded web server properties and application
+# metadata required for the proper execution of the REST API.
+# ===================================================================
+
+server:
+  # The port on which the embedded Tomcat server will listen for requests.
+  # Default is 8080, but can be changed if the port is already in use.
+  port: 8080
+
+spring:
+  application:
+    name: teamcity-executor

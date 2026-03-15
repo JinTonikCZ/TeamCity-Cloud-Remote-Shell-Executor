@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K8s Cloud Executor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .badge-status { font-size: 0.9rem; }
+    </style>
+</head>
+<body class="container mt-5">
+
+<div class="card p-4 mb-4 bg-white">
+    <h2 class="mb-4">🚀 Kubernetes Job Manager</h2>
+    <p class="text-muted">Enter a unique job ID, CPU value, and shell script to create a temporary Ubuntu worker pod in the cluster.</p>
+
+    <div class="mb-3">
+        <label for="jobId" class="form-label">Job ID</label>
+        <input id="jobId" type="text" class="form-control" placeholder="Enter a job ID, e.g. web-task-101">
+    </div>
+
+    <div class="mb-3">
+        <label for="cpu" class="form-label">CPU Count</label>
+        <input id="cpu" type="number" min="0.1" max="8" step="0.1" class="form-control" value="1" placeholder="Enter CPU value, e.g. 1">
+    </div>
+
+    <div class="mb-3">
+        <label for="script" class="form-label">Shell Script</label>
+        <textarea id="script" class="form-control" rows="5" placeholder="echo Hello && sleep 5 && echo Done"></textarea>
+    </div>
+
+    <div class="d-grid">
+        <button class="btn btn-primary px-4" onclick="startJob()">Run Task</button>
+    </div>
+</div>
+
+<div class="card p-4 bg-white">
+    <h4 class="mb-3">Cluster Activity & Monitoring</h4>
+    <table class="table table-hover mt-2">
+        <thead class="table-light">
+        <tr>
+            <th>Job ID</th>
+            <th>Pod Name</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+        </tr>
+        </thead>
+        <tbody id="jobsTable">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    /**
+     * Fetches the current list of jobs from the server and updates the UI table.
+     */
+    async function loadJobs() {
+        try {
+            const res = await fetch('/api/jobs/list');
+            const jobs = await res.json();
+            const tableBody = document.getElementById('jobsTable');
+
+            tableBody.innerHTML = jobs.map(j => `
+                    <tr>
+                        <td class="align-middle"><strong>${j.id}</strong></td>
+                        <td class="align-middle text-muted">${j.name}</td>
+                        <td class="align-middle">
+                            <span class="badge badge-status ${getStatusClass(j.status)}">${j.status}</span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-info me-2" onclick="getLogs('${j.id}')">View Logs</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteJob('${j.id}')">Terminate</button>
+                        </td>
+                    </tr>
+                `).join('');
+        } catch (err) {
+            console.error("Failed to load jobs:", err);
+        }
+    }
+
+    /**
+     * Helper to determine Bootstrap badge color based on K8s pod status.
+     */
+    function getStatusClass(status) {
+        switch (status) {
+            case 'FINISHED':
+                return 'bg-success text-white';
+            case 'IN_PROGRESS':
+                return 'bg-primary text-white';
+            case 'FAILED':
+                return 'bg-danger text-white';
+            case 'QUEUED':
+                return 'bg-warning text-dark';
+            default:
+                return 'bg-secondary text-white';
+        }
+    }
+    /**
+     * API call to trigger a new job creation.
+     */
+    async function startJob() {
+        let id = document.getElementById('jobId').value.trim();
+        let cpu = document.getElementById('cpu').value.trim();
+        let script = document.getElementById('script').value.trim();
+
+        if (!id) {
+            return alert("Please specify a Job ID before running.");
+        }
+        const jobIdPattern = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+        if (!jobIdPattern.test(id)) {
+            return alert("Job ID must contain only lowercase letters, numbers, and hyphens.");
+        }
+
+        if (!cpu) {
+            return alert("Please specify a CPU value.");
+        }
+        const cpuValue = Number(cpu);
+        if (Number.isNaN(cpuValue) || cpuValue <= 0) {
+            return alert("CPU value must be a positive number, e.g. 0.5, 1, or 2.");
+        }
+
+        if (cpuValue > 8) {
+            return alert("CPU value is too high for this demo. Please use a value between 0.1 and 8.");
+        }
+
+        if (!script) {
+            return alert("Please enter a shell script to execute.");
+        }
+
+        // Prevent users from sending the full pod name instead of the logical job ID.
+        if (id.startsWith("worker-pod-")) {
+            id = id.replace(/^worker-pod-/, "");
+        }
+
+        const payload = {
+            id: id,
+            cpu: cpu,
+            script: script
+        };
+
+        const res = await fetch('/api/jobs/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            return alert("Failed to start job: " + errorText);
+        }
+
+        const message = await res.text();
+        alert(message);
+
+        document.getElementById('jobId').value = id;
+        loadJobs();
+    }
+
+    /**
+     * API call to retrieve logs for a specific pod.
+     */
+    async function getLogs(id) {
+        const res = await fetch(`/api/jobs/${id}/logs`);
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            return alert("Failed to load logs: " + errorText);
+        }
+
+        const logs = await res.text();
+        alert("--- CONTAINER OUTPUT ---\n" + logs);
+    }
+
+    /**
+     * API call to delete a pod from the cluster.
+     */
+    async function deleteJob(id) {
+        if (!confirm(`Are you sure you want to terminate job ${id}?`)) return;
+
+        const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            return alert("Failed to delete job: " + errorText);
+        }
+
+        const message = await res.text();
+        alert(message);
+        loadJobs();
+    }
+    // Initialize table and set up auto-refresh every 3 seconds
+    setInterval(loadJobs, 3000);
+    loadJobs();
+</script>
+</body>
+</html>
