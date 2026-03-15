@@ -126,30 +126,6 @@ sequenceDiagram
 ```text
 QUEUED -> IN_PROGRESS -> FINISHED
                      -> FAILED
-
-Suggested meaning of states:
-
-QUEUED — request accepted, executor Pod is being scheduled or started
-
-IN_PROGRESS — Pod is running and the script is executing
-
-FINISHED — execution completed successfully
-
-FAILED — pod creation or script execution failed
-
-REST API
-Submit a job
-
-POST /api/jobs/start
-
-Request body:
-
-{
-  "id": "web-task-101",
-  "script": "echo Hello && sleep 5 && echo Done",
-  "cpu": "1"
-}
-```
 Example success response:
 
 ✅ Job web-task-101 successfully submitted with CPU=1.
