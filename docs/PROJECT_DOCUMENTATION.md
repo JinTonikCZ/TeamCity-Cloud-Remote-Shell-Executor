@@ -1,6 +1,8 @@
 Project Documentation: TeamCity Remote Shell Executor
-1. Architectural Vision & Tech Stack Rationale
-The core objective of this project is to simulate the behavior of autoscaling CI/CD build agents, similar to TeamCity Cloud. To achieve this efficiently within an MVP scope, the architecture relies on ephemeral containers rather than full virtual machines.
+---
+
+**1. Architectural Vision & Tech Stack Rationale
+**The core objective of this project is to simulate the behavior of autoscaling CI/CD build agents, similar to TeamCity Cloud. To achieve this efficiently within an MVP scope, the architecture relies on ephemeral containers rather than full virtual machines.
 
 Here is the rationale behind the chosen technology stack:
 
@@ -12,8 +14,8 @@ Fabric8 Kubernetes Client: Interacting with the Kubernetes API requires a reliab
 
 Vanilla JS + Bootstrap 5 (Frontend): To demonstrate the backend API without over-engineering the client side, a lightweight Vanilla JavaScript frontend was implemented. It uses basic fetch API for asynchronous polling and Bootstrap 5 for clean, responsive UI components, keeping the focus entirely on the backend orchestration.
 
-2. Project Structure & Core Components
-The application follows a clean, layered architecture separating HTTP routing from business logic and infrastructure interactions.
+**2. Project Structure & Core Components
+**The application follows a clean, layered architecture separating HTTP routing from business logic and infrastructure interactions.
 
 JobController.kt (Presentation Layer): Serves as the REST API entry point. It defines the contract for external clients, handling HTTP GET, POST, and DELETE requests for job creation, status retrieval, log fetching, and pod termination.
 
@@ -23,17 +25,100 @@ JobModels.kt (Data Layer): Contains Data Transfer Objects (DTOs) such as JobRequ
 
 index.html: The client-side dashboard that interacts with the JobController. It implements a 5-second interval polling mechanism to dynamically update the UI with real-time job statuses and provides action buttons to run tasks or fetch logs.
 
-Вот продолжение твоей документации, оформленное в строгом Markdown. Просто скопируй этот блок и вставь его сразу после второго раздела в твой файл PROJECT_DOCUMENTATION.md.
+... 
+* **`JobModels.kt` (Data Layer):** Contains Data Transfer Objects (DTOs) such as `JobRequest` and `JobResponse`. It also defines the `JobStatus` enum (`QUEUED`, `RUNNING`, `COMPLETED`, `FAILED`) to ensure a strict contract between the backend and frontend.
+* **`index.html`:** The client-side dashboard that interacts with the `JobController`. It implements a 5-second interval polling mechanism to dynamically update the UI with real-time job statuses and provides action buttons to run tasks or fetch logs.
 
-3. Testing Strategy
+### System Workflow (Sequence Diagram)
+The following sequence diagram illustrates the complete lifecycle of a remote shell execution job, from the initial user request to the final log retrieval.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Client (Developer)
+
+    box "Spring Boot Service" #fffdee
+        participant API as JobController
+        participant Service as JobService
+    end
+
+    box "Kubernetes Cluster" #eef7ff
+        participant K8s as K8s API (Fabric8)
+        participant Pod as Pod (Remote Executor)
+    end
+
+    rect rgb(250, 250, 250)
+        Note over User, API: 1. Job Submission
+        User->>API: POST /api/jobs/start {id, script, cpu}
+        activate API
+        API->>Service: createAndRunJob(id, script, cpu)
+        activate Service
+        Service->>Service: validateJobId(id)
+        Service->>Service: validateCpu(cpu)
+        Service->>K8s: Request Pod creation
+        activate K8s
+        K8s-->>Service: Pod created (Pending)
+        deactivate K8s
+        Service-->>API: Job submitted
+        deactivate Service
+        API-->>User: 200 OK
+        deactivate API
+    end
+
+    rect rgb(250, 250, 250)
+        Note over K8s, Pod: 2. Background Execution
+        K8s->>Pod: Container startup
+        activate Pod
+        Note right of Pod: Pod transitions to Running.<br/>Executor becomes available.
+        Pod->>Pod: Execute shell script
+        Pod-->>K8s: Script finished
+        deactivate Pod
+        Note right of K8s: Pod completes or fails.<br/>Resources can be freed later.
+    end
+
+    rect rgb(250, 250, 250)
+        Note over User, K8s: 3. Status Polling
+        User->>API: GET /api/jobs/list
+        activate API
+        API->>Service: getAllJobs()
+        activate Service
+        Service->>K8s: Request Pod states
+        activate K8s
+        K8s-->>Service: Return Pod phases
+        deactivate K8s
+        Service->>Service: Map K8s phase to UI status
+        Service-->>API: QUEUED / IN_PROGRESS / FINISHED / FAILED
+        deactivate Service
+        API-->>User: 200 OK
+        deactivate API
+    end
+
+    rect rgb(250, 250, 250)
+        Note over User, K8s: 4. Log Retrieval
+        User->>API: GET /api/jobs/{id}/logs
+        activate API
+        API->>Service: getJobLogs(id)
+        activate Service
+        Service->>K8s: Request container logs
+        activate K8s
+        K8s-->>Service: Return logs
+        deactivate K8s
+        Service-->>API: Logs
+        deactivate Service
+        API-->>User: 200 OK
+        deactivate API
+    end
+```
+
+**3. Testing Strategy**
 To ensure reliability and maintainability, the application includes a suite of automated tests focusing on different layers of the system.
 
 Unit Testing (TeamcityExecutorApplicationTests & Service layer): The business logic is isolated and tested independently. By mocking the Fabric8 Kubernetes Client, we can simulate various Kubernetes cluster states (e.g., Pod creation success, retrieval of logs, and mapping K8s phases like Pending or Succeeded to application-specific statuses) without needing a live cluster during the CI/CD build phase.
 
 Integration Testing (JobControllerTest): The REST API layer is tested using Spring's MockMvc. These tests validate the HTTP contracts, ensuring that endpoints correctly accept valid payloads, reject malformed requests (e.g., invalid job IDs or missing CPU parameters), and return the expected JSON structures and HTTP status codes (200 OK, 400 Bad Request, etc.).
 
-4. Constraints & Known Limitations
-Building an MVP requires deliberate trade-offs. The following constraints were accepted for this iteration:
+**4. Constraints & Known Limitations
+**Building an MVP requires deliberate trade-offs. The following constraints were accepted for this iteration:
 
 Stateless Backend (No Database): Currently, the Spring Boot application is entirely stateless. It relies on the Kubernetes API as the single source of truth. If a Pod is deleted (either manually via the UI or by K8s garbage collection), all metadata and execution logs for that job are permanently lost.
 
@@ -43,8 +128,8 @@ Local Certificate Bypassing: To facilitate smooth local development with a remot
 
 Lack of True Queuing: The UI displays a QUEUED status, but this simply maps to the Kubernetes Pending phase (waiting for the scheduler). If a user submits 1,000 jobs simultaneously, the API will immediately attempt to create 1,000 Pods, potentially overwhelming the cluster's control plane. There is no external message broker handling backpressure.
 
-5. Future Improvements & Scalability
-If this MVP were to evolve into a production-grade Enterprise solution, the following architectural upgrades would be prioritized:
+**5. Future Improvements & Scalability
+**If this MVP were to evolve into a production-grade Enterprise solution, the following architectural upgrades would be prioritized:
 
 Message Broker Integration (RabbitMQ / Apache Kafka): To handle high throughput and burst traffic, incoming execution requests should be published to a message queue. Worker nodes or the Spring Boot service would asynchronously consume these messages and provision K8s Pods only when cluster resources are actually available, preventing API server exhaustion.
 
@@ -56,8 +141,8 @@ Graceful Degradation & Timeouts: Users could submit infinite loops (e.g., sleep 
 
 Hardened Network Policies: Worker pods should be isolated using Kubernetes Network Policies, blocking outbound internet access (unless explicitly required) and preventing horizontal traversal within the cluster.
 
-6. Edge Cases Handled
-Despite being an MVP, several edge cases are proactively managed to ensure system stability:
+**6. Edge Cases Handled
+**Despite being an MVP, several edge cases are proactively managed to ensure system stability:
 
 Job ID Normalization: To prevent K8s naming validation errors and UI glitches (such as duplicated prefixes like worker-pod-worker-pod-web-task-12), the backend sanitizes and normalizes incoming Job IDs before interacting with the Fabric8 client.
 
