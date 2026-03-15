@@ -68,6 +68,7 @@ sequenceDiagram
     API-->>UI: logs
 ```
 ## Job Lifecycle
+The application tracks the lifecycle of each submitted job and maps raw Kubernetes Pod states to simpler business statuses shown in the UI.
 
 ```text
 QUEUED -> IN_PROGRESS -> FINISHED -> FAILED
