@@ -119,6 +119,8 @@ sequenceDiagram
         API-->>User: 200 OK
         deactivate API
     end
+
+```
 ## Job Lifecycle
 
 ```text
@@ -147,7 +149,7 @@ Request body:
   "script": "echo Hello && sleep 5 && echo Done",
   "cpu": "1"
 }
-
+```
 Example success response:
 
 ✅ Job web-task-101 successfully submitted with CPU=1.
