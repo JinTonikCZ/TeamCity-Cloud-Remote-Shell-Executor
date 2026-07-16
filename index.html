@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="cs" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Pavel Dikan – odpovědi pro pozici IT Operations Engineer">
+  <title>Pavel Dikan | IT Operations Engineer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#home"><span>PD</span>Pavel Dikan</a>
+  <button id="menuBtn" class="icon" aria-label="Otevřít menu">☰</button>
+  <nav id="nav" aria-label="Otázky výběrového řízení"></nav>
+  <div class="tools">
+    <span id="pragueTime" title="Aktuální čas v Praze"></span>
+    <span id="visitTime" title="Čas na stránce"></span>
+    <button id="themeBtn" class="icon" aria-label="Změnit motiv">◐</button>
+  </div>
+</header>
+
+<main id="home">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">IT OPERATIONS · LINUX · DEVOPS</p>
+      <h1>Odpovědi pro výběrové řízení</h1>
+      <p class="lead">Praktický profil propojující provoz Linux infrastruktury, cloud, automatizaci, Kubernetes a práci s fyzickým hardwarem.</p>
+      <div class="actions">
+        <a class="button primary" href="#q1">Prohlédnout odpovědi</a>
+        <a class="button" href="https://github.com/Programatorrr/TeamCity-Cloud-Remote-Shell-Executor">GitHub projekt</a>
+      </div>
+    </div>
+    <aside class="summary">
+      <strong>Junior Linux Administrator</strong>
+      <p>Praha · k dispozici pro HPP</p>
+      <p>Zkušenost s provozem více než 300 fyzických serverů, cloudovou platformou OpenStack, monitoringem, automatizací a zákaznickými incidenty.</p>
+    </aside>
+  </section>
+
+  <section class="intro">
+    <p>Dobrý den, paní Tindel, děkuji za možnost podrobněji představit své zkušenosti. Jednotlivé odpovědi jsou níže doplněny ukázkami z mé práce a projektů.</p>
+  </section>
+
+  <section id="answers" class="answers">
+    <article id="q1" class="card open">
+      <button class="question"><span>01</span>Aktuální pracovní situace a poslední role<i>+</i></button>
+      <div class="answer">
+        <p>V současnosti dokončuji magisterské studium informatiky na České zemědělské univerzitě v Praze. Všechny předměty mám splněné a zbývá mi pouze obhajoba diplomové práce, proto jsem plně k dispozici pro práci.</p>
+        <p>Moje poslední relevantní role byla Junior Linux Administrator ve společnosti Cloudinfrastack. Podílel jsem se na provozu prostředí s více než 300 fyzickými servery a různými zákaznickými projekty. Každodenní práce spojovala monitoring, prvotní analýzu incidentů, kontrolu logů, práci v Ubuntu, ověřování dostupnosti služeb a komunikaci se zákazníky. Při problémech jsem nejprve určil rozsah dopadu, provedl bezpečné provozní kroky v rámci svých oprávnění a po zásahu ověřil návrat služby i monitoringu do normálního stavu.</p>
+        <figure><img src="cloud-workspace.svg" alt="Pracoviště pro správu cloudové infrastruktury"><figcaption>Pracovní prostředí při diagnostice a správě cloudové infrastruktury.</figcaption></figure>
+      </div>
+    </article>
+
+    <article id="q2" class="card">
+      <button class="question"><span>02</span>Zkušenosti se správou Linux serverů<i>+</i></button>
+      <div class="answer">
+        <p>Nejvíce praktických zkušeností mám s Ubuntu Server 22.04 a 24.04. Připojoval jsem se přes SSH, kontroloval služby a procesy, analyzoval systémové i aplikační logy, ověřoval využití disků a paměti, řešil dostupnost síťových rozhraní a prováděl běžné restartovací či opravné kroky. Samostatně jsem zvládal prvotní diagnostiku, práci s Puppet agentem, kontrolu certifikátů a instalaci Ubuntu na fyzické i virtuální servery.</p>
+        <p>Při řešení problému postupuji od nejnižší vrstvy směrem k aplikaci: ověřím hardware nebo dostupnost virtuálního stroje, síť, stav operačního systému, závislé služby a teprve poté konkrétní aplikaci. Výsledek vždy kontroluji nejen příkazem v terminálu, ale také z pohledu uživatele a monitoringu. Znalosti RHEL a automatizace si dále rozšiřuji v kurzech Red Hat Enterprise Linux Technical Overview RH024 a Ansible Basics DO007.</p>
+        <figure><img src="server-bios.svg" alt="Diagnostika serveru v BIOSu"><figcaption>Kontrola serverového hardware, paměti a bootovací konfigurace přímo na zařízení.</figcaption></figure>
+      </div>
+    </article>
+
+    <article id="q3" class="card">
+      <button class="question"><span>03</span>Provoz aplikací, monitoring a analýza logů<i>+</i></button>
+      <div class="answer">
+        <p>Monitoring a prvotní analýza incidentů byly významnou částí mé práce. V Sensu a Uchiwa jsem sledoval dostupnost serverů a služeb a následně ověřoval, zda jde o skutečný výpadek, krátkodobý výkyv nebo plánovanou změnu. Nejčastěji jsem řešil nedostupné servery, nefunkční služby, chyby Puppet agentů, problémy s certifikáty, síťovými rozhraními, databázovými zálohami, OpenStack komponentami nebo stavem Ceph úložiště.</p>
+        <p>Při analýze jsem porovnával čas alertu s událostmi v logu, posledními změnami a stavem navazujících služeb. Na fotografii je praktická síťová diagnostika nedostupného hostu; výstup „Destination Host Unreachable“ ukazuje, že problém bylo nutné hledat v dostupnosti cesty nebo cílového zařízení, nikoliv pouze v aplikaci.</p>
+        <figure><img src="network-diagnostics.svg" alt="Síťová diagnostika příkazem ping"><figcaption>Ověření konektivity a lokalizace problému mezi pracovním bodem a serverem.</figcaption></figure>
+      </div>
+    </article>
+
+    <article id="q4" class="card">
+      <button class="question"><span>04</span>Praktické technologie a nástroje<i>+</i></button>
+      <div class="answer">
+        <p>Moje praktická zkušenost spojuje několik vrstev infrastruktury. V produkčním cloudovém prostředí jsem pracoval s Ubuntu, OpenStackem, Ceph úložištěm, Puppetem, Foremanem, monitoringem a fyzickými servery. Rozumím proto návaznosti mezi hardwarem, virtualizací, operačním systémem, sítí a službou, kterou používá zákazník.</p>
+        <p>V diplomové práci jsem vytvořil vlastní Kubernetes prostředí na MicroK8s, nainstaloval Argo CD a propojil jej s GitHub repozitářem. Aplikaci nginx jsem definoval pomocí Helm chartu. Po změně počtu replik v Gitu Argo CD detekoval nový požadovaný stav, synchronizoval ho do clusteru a vytvořil druhý Pod. Následně jsem ručně změnil počet replik na nulu a ověřil, že zapnutý self-healing odchylku během několika sekund automaticky napravil.</p>
+        <div class="gallery two">
+          <figure><img src="kubernetes-terminal.svg" alt="Kubernetes terminál a self-healing"><figcaption>Vyvolání driftu a automatická obnova dvou replik.</figcaption></figure>
+          <figure><img src="argocd-dashboard.svg" alt="Argo CD Healthy a Synced"><figcaption>Argo CD po synchronizaci: aplikace Healthy a Synced.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article id="q5" class="card">
+      <button class="question"><span>05</span>Automatizace a skriptování<i>+</i></button>
+      <div class="answer">
+        <p>V práci jsem využíval existující automatizaci prostřednictvím Puppetu a Foremanu. Místo ruční změny na každém serveru se konfigurace aplikovala centrálně a bylo možné dohledat, kde proběhla úspěšně a kde vznikla chyba. Moje role zahrnovala spuštění a kontrolu Puppet agenta, vyhodnocení výsledku a odstranění běžných problémů s komunikací nebo certifikáty.</p>
+        <p>V projektu TeamCity Cloud Remote Shell Executor jsem automatizoval celý životní cyklus vzdálené úlohy. Uživatel odešle shellový skript a požadované prostředky, backend vytvoří dočasný Kubernetes Pod, sleduje jeho stav, zpřístupní logy a po dokončení umožní Pod odstranit. Výsledkem je malý, ale funkční model automaticky vytvářených build executorů. Součástí řešení je validace vstupů, mapování stavů Kubernetes na srozumitelné stavy úlohy a testování aplikační logiky.</p>
+      </div>
+    </article>
+
+    <article id="q6" class="card">
+      <button class="question"><span>06</span>Správa infrastruktury a zákaznických prostředí<i>+</i></button>
+      <div class="answer">
+        <p>V Cloudinfrastacku jsem pracoval v prostředí, kde fyzická a cloudová infrastruktura obsluhovala více zákaznických projektů. Kromě vzdálené administrace jsem pracoval přímo v datacentru: instaloval a demontoval rackové servery, zapojoval kabeláž, měnil komponenty, kontroloval disky, paměť a průběh bootování a připravoval zařízení k dalšímu provozu.</p>
+        <p>Starší zkušenost z oblasti telekomunikací mi pomáhá při řešení konektivity. Instaloval jsem a opravoval připojení pro koncové i firemní zákazníky, pracoval s optickými trasami a hledal závady od fyzického zakončení až po aktivní síťové zařízení. Díky tomu se při incidentu nesoustředím pouze na software, ale kontroluji celý řetězec závislostí.</p>
+        <div class="gallery three">
+          <figure><img src="cloud-rack.svg" alt="Rack s fyzickými servery"><figcaption>Fyzické servery, síťové prvky a kabeláž v cloudovém prostředí.</figcaption></figure>
+          <figure><img src="fiber-optics.svg" alt="Optické rozvody"><figcaption>Práce s optickým rozvodem a kontrola zakončení vláken.</figcaption></figure>
+          <figure><img src="storage-lab.svg" alt="Disky a SSD"><figcaption>Diagnostika, třídění a příprava diskových zařízení.</figcaption></figure>
+        </div>
+      </div>
+    </article>
+
+    <article id="q7" class="card">
+      <button class="question"><span>07</span>Provoz, automatizace a bezpečnost<i>+</i></button>
+      <div class="answer">
+        <p>Ano, právě tato kombinace mě profesně zajímá. Začínal jsem u fyzické infrastruktury, sítí a oprav zařízení, pokračoval ke správě Linuxu a cloudovému provozu a nyní se zaměřuji na Kubernetes, Infrastructure as Code a GitOps. Přirozeným dalším krokem je bezpečnost provozu: řízené změny, auditní historie, minimální oprávnění, bezpečná práce s tajemstvími a kontrola kontejnerových workloadů.</p>
+        <p>Na vlastním projektu Remote Shell Executor je bezpečnost dobře vidět. Protože služba spouští uživatelské příkazy, produkční varianta musí oddělit executory, omezit jejich práva a prostředky, vynutit časový limit, síťová pravidla a důvěryhodné TLS spojení. Neberu tedy bezpečnost jako doplněk, ale jako součást návrhu a každodenního provozu.</p>
+      </div>
+    </article>
+
+    <article id="q8" class="card">
+      <button class="question"><span>08</span>Technická situace a výsledek řešení<i>+</i></button>
+      <div class="answer">
+        <p>Jedním z praktických případů byl fyzický server, který po výpadku napájení zůstal nedostupný. Nejprve jsem v monitoringu ověřil, že nejde o krátký výkyv, poté jsem zkontroloval síťovou dostupnost a SSH. Protože zařízení nereagovalo, pokračoval jsem kontrolou fyzického stavu přímo v datacentru.</p>
+        <p>Po spuštění serveru jsem ověřil průběh bootování, disky, síťová rozhraní, systémové služby, časovou synchronizaci a chyby v logu. Nakonec jsem zkontroloval dostupnost navazujících komponent a návrat serveru do monitoringu. Výsledkem bylo obnovení provozu bez dalšího dopadu na zákaznické prostředí. Tato situace potvrdila, že samotné zapnutí zařízení nestačí; úspěšná obnova musí být ověřena od hardwaru až po službu a monitoring.</p>
+        <figure><img src="imac-service.svg" alt="Servis počítačového hardware"><figcaption>Ukázka mé dlouhodobé praktické zkušenosti s diagnostikou a opravami zařízení.</figcaption></figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="contact">
+    <div><p class="eyebrow">KONTAKT</p><h2>Děkuji za Váš čas.</h2><p>Rád své zkušenosti podrobněji představím při osobním nebo online pohovoru.</p></div>
+    <div><strong>Pavel Dikan</strong><a href="mailto:subxv1@gmail.com">subxv1@gmail.com</a><a href="tel:+420608820635">+420 608 820 635</a></div>
+  </section>
+</main>
+
+<footer>© <span id="year"></span> Pavel Dikan · IT Operations Engineer profile</footer>
+</body>
+</html>
